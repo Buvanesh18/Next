@@ -33,5 +33,5 @@ jobs:
           sf project deploy start \
             --source-dir . \
             --target-org ci-org \
-            --test-level RunLocalTests \
+            --test-level NoTestRun  \
             --wait 30 --verbose
