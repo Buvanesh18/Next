@@ -1,0 +1,37 @@
+name: Deploy to Salesforce
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'force-app/**' ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate with JWT
+        working-directory: force-app
+        shell: bash
+        run: |
+          echo "${{ secrets.JWT_KEY }}" > jwt.key
+          sf org login jwt \
+            --jwt-key-file jwt.key \
+            --client-id    "${{ secrets.CONSUMER_KEY }}" \
+            --username     "${{ secrets.USERNAME }}" \
+            --instance-url "${{ secrets.INSTANCE_URL }}" \
+            --alias ci-org -s
+
+      - name: Deploy metadata
+        working-directory: force-app
+        run: |
+          sf project deploy start \
+            --source-dir . \
+            --target-org ci-org \
+            --test-level RunLocalTests \
+            --wait 30 --verbose
